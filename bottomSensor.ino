@@ -92,7 +92,6 @@ void measure(){
 }
 
 calibrate(){
-    stamp = millis() + 10000;
     for(int counter = 0; counter < 16; counter++){
             
         String bin = String(counter, BIN);
@@ -122,7 +121,7 @@ calibrate(){
         maxValue[counter + 32] = value[counter + 32];
     }
 
-
+    stamp = millis() + 10000;
     while(millis() < stamp){
         for(int counter = 0; counter < 16; counter++){
             
@@ -163,5 +162,19 @@ calibrate(){
 }
 
 void specialPrint(){
+    Serial.println("                " + 100);
+    Serial.println();
+    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
+    Serial.println();
+    Serial.println(100 + "              " + 100 + "             " + 100);
+    Serial.println("    " + 100 + "                     " + 100);
+    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
+    Serial.println(100 + "  " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100);
+    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
+    Serial.println("    " + 100 + "                     " + 100);
+    Serial.println(100 + "              " + 100 + "             " + 100);
+    Serial.println();
+    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
+    Serial.println();
     Serial.println("                " + 100);
 }
