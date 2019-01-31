@@ -1,12 +1,14 @@
 
-#define D0 11                       //die 4 Pins fuer die Multiplexer
+#define D0 11                           //die 4 Pins fuer die Multiplexer
 #define D1 10
 #define D2 9
 #define D3 8
 
-#define S1 A3                       //Input der drei Multiplexer
+#define S1 A3                           //Input der drei Multiplexer
 #define S2 A2
 #define S3 A1
+
+#define INTERPIN 7                      //InterruptPin
 
 #define PLEXEN D12
 
@@ -18,6 +20,7 @@ int threshold[48];                      //Schwellwerte fuer jeden Sensor
 long stamp = 0;
 int maxValue[48];
 int minValue[48];
+int state;
 
 void setup(){
     for(int i = 2; i <= 13; i++){       //digitale Pins auf Input
@@ -43,12 +46,11 @@ void setup(){
 void loop(){
     measure();
     delay(100);
-    specialPrint();
+    //specialPrint();
     delay(10000);
 }
 
 void measure(){
-    int state;
 
     for(int counter = 0; counter < 16; counter++){
 
@@ -91,7 +93,7 @@ void measure(){
     }
 }
 
-calibrate(){
+void calibrate(){
     for(int counter = 0; counter < 16; counter++){
             
         String bin = String(counter, BIN);
@@ -161,20 +163,26 @@ calibrate(){
     }
 }
 
-void specialPrint(){
-    Serial.println("                " + 100);
-    Serial.println();
-    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
-    Serial.println();
-    Serial.println(100 + "              " + 100 + "             " + 100);
-    Serial.println("    " + 100 + "                     " + 100);
-    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
-    Serial.println(100 + "  " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100 + " " + 100);
-    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
-    Serial.println("    " + 100 + "                     " + 100);
-    Serial.println(100 + "              " + 100 + "             " + 100);
-    Serial.println();
-    Serial.println("        " + 100 + "     " + 100 + "     " + 100);
-    Serial.println();
-    Serial.println("                " + 100);
+void interrupt(){
+    digitalWrite(INTERPIN, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(INTERPIN, LOW);
 }
+
+/*void specialPrint(){
+    Serial.println("                " + value[3]);
+    Serial.println();
+    Serial.println("        " + value[39] + "     " + value[2] + "     " + value[32]);
+    Serial.println();
+    Serial.println(value[31] + "              " + value[1] + "             " + value[7]);
+    Serial.println("        " + value[29] + "     " + value[0] + "     " + value[5]);
+    Serial.println("    " + value[28] + "       " + value[4]);
+    Serial.println(value[27] + "  " + value[26] + " " + value[25] + " " + value[24] + " " + value[40] + " " + value[8] + " " + value[9] + " " + value[10] + " " + value[11]);
+    Serial.println("    " + value[20] + "       " + value[12]);
+    Serial.println("        " + value[21] + "     " + value[16] + "     " + value[13]);
+    Serial.println(value[37] + "              " + value[17] + "             " + value[34]);
+    Serial.println();
+    Serial.println("        " + value[22] + "     " + value[18] + "     " + value[14]);
+    Serial.println();
+    Serial.println("                " + value[19]);
+}*/
