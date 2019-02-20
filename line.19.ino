@@ -89,8 +89,8 @@ void loop(){
 void vAdd(){
     for(int counter = 0; counter <= 40; counter++){
         if(hit[counter]){
-           x[0] = x[0] + v[counter][0];
-           x[1] = x[1] + v[counter][1]; 
+           x[0] += v[counter][0];
+           x[1] += v[counter][1]; 
         }
     }
 }
@@ -143,7 +143,10 @@ void measure(){
     
     
     vAdd();
-    direction = circulate(atan2(x[1], x[0]), 0, 359);
+    Serial.print(x[0]);
+    Serial.print(",  ");
+    Serial.println(x[1]);
+    direction = circulate(atan2(x[1], x[0]) + 90, 0, 359);
 }
 
 void calibrate(){
