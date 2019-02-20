@@ -16,7 +16,7 @@
 
 byte binPins[] = {D0, D1, D2, D3};      //die 4 Pins fuer die Multiplexer
 int value[48];                          //ausgelesene Werte
-bool nus[48];                           //not used sensors
+bool nus[48];                          //not used sensors
 bool hit[48];                           //ausgeschlagene Sensoren
 int threshold[48];                      //Schwellwerte fuer jeden Sensor
 long stamp = 0;
@@ -34,7 +34,7 @@ void setup(){
     for(int i = 2; i <= 13; i++){       //digitale Pins auf Input
         pinMode(i, INPUT);
     }
-    pinMode(A0, INPUT);                 //analoge Pins auf Input
+    pinMode(A0, OUTPUT);                 //analoge Pins auf Input
     pinMode(A4, INPUT);
     pinMode(A5, INPUT);
     pinMode(A6, INPUT);
@@ -57,21 +57,33 @@ void setup(){
 
 
 void loop(){
-    if(Serial.available()){
+    if(Serial.available() || true){
         calibrate();
         prom(true);
     }
     measure();
+    Serial.println(direction);
     /*if(hitx){
         Serial.write(map(direction, 0, 360, 0, 255));
         hitx = false;
     }*/
-    for(int i = 0; i <= 40; i++){
+    /*for(int i = 0; i <= 40; i++){
         Serial.print(value[i]);
         Serial.print(", ");
     }
     Serial.println();
+    Serial.println();*/
+    /*for(int i = 0; i <= 40; i++){
+        Serial.print(value[i]);
+        Serial.print(", ");
+        Serial.print(threshold[i]);
+        Serial.print(",    ");
+    }
     Serial.println();
+    Serial.println();
+    delay(1000);*/
+
+    
 }
 
 void vAdd(){
@@ -131,7 +143,7 @@ void measure(){
     
     
     vAdd();
-    direction = circulate(atan2(x[1], x[0]) + 90, 0, 359);
+    direction = circulate(atan2(x[1], x[0]), 0, 359);
 }
 
 void calibrate(){
