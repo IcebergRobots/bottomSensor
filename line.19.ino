@@ -53,44 +53,36 @@ void setup(){
     digitalWrite(PLEXEN, LOW);
 
     prom(false);
+    Serial.println("Moin Moin");
+    vectorToSensor();
+    calibrate();
 }
 
 
 void loop(){
-    if(Serial.available() || true){
+    /*if(Serial.available() || true){
         calibrate();
         prom(true);
-    }
+    }*/
     measure();
-    Serial.println(direction);
+    //Serial.println(direction);
     /*if(hitx){
         Serial.write(map(direction, 0, 360, 0, 255));
         hitx = false;
     }*/
-    /*for(int i = 0; i <= 40; i++){
-        Serial.print(value[i]);
-        Serial.print(", ");
-    }
-    Serial.println();
-    Serial.println();*/
-    /*for(int i = 0; i <= 40; i++){
-        Serial.print(value[i]);
-        Serial.print(", ");
-        Serial.print(threshold[i]);
-        Serial.print(",    ");
-    }
-    Serial.println();
-    Serial.println();
-    delay(1000);*/
+    delay(2000);
 
     
 }
 
 void vAdd(){
+    x[0]=0;
+    x[1]=0;
     for(int counter = 0; counter <= 40; counter++){
         if(hit[counter]){
-           x[0] += v[counter][0];
-           x[1] += v[counter][1]; 
+            Serial.println(counter);
+            x[0] += v[counter][0];
+            x[1] += v[counter][1]; 
         }
     }
 }
@@ -123,15 +115,18 @@ void measure(){
         value[counter + 32] = analogRead(S3);
 
         if(value[counter] <= threshold[counter]){
+            Serial.print(".");
             hit[counter] = true;
             hitx = true;
         } 
         if(value[counter + 16] <= threshold[counter + 16]){
+            Serial.print(".");
             hit[counter + 16] = true;
             hitx = true;
         } 
         if(value[counter + 32] <= threshold[counter + 32] && counter <= 8){
-            hit[counter + 16] = true;
+            Serial.print(".");
+            hit[counter + 32] = true;
             hitx = true;
         }
         if(hitx){
@@ -143,9 +138,6 @@ void measure(){
     
     
     vAdd();
-    Serial.print(x[0]);
-    Serial.print(",  ");
-    Serial.println(x[1]);
     direction = circulate(atan2(x[1], x[0]) + 90, 0, 359);
 }
 
