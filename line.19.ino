@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 #define D1 9                           //die 4 Pins fuer die Multiplexer
 #define D2 8
 #define D3 10
@@ -16,6 +18,7 @@
 
 byte binPins[] = {D0, D1, D2, D3};      //die 4 Pins fuer die Multiplexer
 int values[48];
+int counter;
 
 void setup() {
   Serial.begin(9600);
@@ -39,9 +42,13 @@ void setup() {
 
   pinMode(PLEXEN, OUTPUT);
   digitalWrite(PLEXEN, LOW);
+  counter = EEPROM.read(0) + 1;
+  counter %= 16;
+  EEPROM.write(0, counter);
+  Serial.println("Sensor Nr.: "+String(counter));
+  delay(1000);
 
 }
-int counter = 0;
 void loop() {
   String bin = String(counter, BIN);
   int binlength = bin.length();
@@ -60,12 +67,7 @@ void loop() {
   unsigned long startT = millis() + 15000;
 
 
-  while (millis()<startT) {
-    Serial.println(analogRead(S2));
+  while (1) {
+    Serial.println(analogRead(S1));
   }
-  delay(500);
-  counter++;
-  Serial.print("Nest Sensor: ");
-  Serial.print(counter);
-  delay(1000);
 }
