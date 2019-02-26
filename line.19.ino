@@ -1,9 +1,10 @@
 #include <EEPROM.h>
 
-#define D1 9                           //die 4 Pins fuer die Multiplexer
-#define D2 8
+#define D0 9 
+#define D1 8                         //die 4 Pins fuer die Multiplexer
+#define D2 11 
 #define D3 10
-#define D0 11
+
 
 #define S1 A3                           //Input der drei Multiplexer
 #define S2 A2
