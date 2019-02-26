@@ -54,11 +54,11 @@ void loop() {
   int binlength = bin.length();
   bool state;
 
-  for (int i = 0; i <= 4 - binlength; i++) {
+  for (int i = 0; i < 4 - binlength; i++) {
     bin = "0" + bin;
   }
 
-  for (int i = 0; i <= 4; i++) {
+  for (int i = 0; i < 4; i++) {
     if (bin[i] == '0') state = LOW;
     if (bin[i] == '1') state = HIGH;
     digitalWrite(binPins[i], state);
