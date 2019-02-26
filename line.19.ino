@@ -1,8 +1,8 @@
 #include <EEPROM.h>
 
-#define D0 9 
+#define D0 9
 #define D1 8                         //die 4 Pins fuer die Multiplexer
-#define D2 11 
+#define D2 11
 #define D3 10
 
 
@@ -23,6 +23,12 @@ int counter;
 
 void setup() {
   Serial.begin(9600);
+
+  counter = EEPROM.read(0) + 1;
+  counter %= 41;
+  EEPROM.write(0, counter);
+  Serial.println("Sensor Nr.: " + String(counter));
+
   for (int i = 2; i <= 13; i++) {     //digitale Pins auf Input
     pinMode(i, INPUT);
   }
@@ -43,21 +49,19 @@ void setup() {
 
   pinMode(PLEXEN, OUTPUT);
   digitalWrite(PLEXEN, LOW);
-  counter = EEPROM.read(0) + 1;
-  counter %= 16;
-  EEPROM.write(0, counter);
-  Serial.println("Sensor Nr.: "+String(counter));
-  delay(1000);
+
 
 }
 void loop() {
-  String bin = String(counter, BIN);
+  String bin = String(counter % 16, BIN);
   int binlength = bin.length();
   bool state;
 
   for (int i = 0; i < 4 - binlength; i++) {
     bin = "0" + bin;
   }
+  Serial.println("Controlbits: " + bin);
+  delay(2000);
 
   for (int i = 0; i < 4; i++) {
     if (bin[i] == '0') state = LOW;
@@ -69,6 +73,11 @@ void loop() {
 
 
   while (1) {
-    Serial.println(analogRead(S1));
+    if (counter < 16)
+      Serial.println(analogRead(S1));
+    else if (counter < 32)
+      Serial.println(analogRead(S2));
+    else if (counter < 48)
+      Serial.println(analogRead(S3));
   }
 }
