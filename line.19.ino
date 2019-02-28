@@ -1,9 +1,9 @@
 #include<EEPROM.h>
 
-#define D0 11                           //die 4 Pins fuer die Multiplexer
-#define D1 10
-#define D2 9
-#define D3 8
+#define D0 9                           //die 4 Pins fuer die Multiplexer
+#define D1 8
+#define D2 11
+#define D3 10
 
 #define S1 A3                           //Input der drei Multiplexer
 #define S2 A2
@@ -99,11 +99,11 @@ void measure(){
         String bin = String(counter, BIN);
         int binlength = bin.length();
 
-        for(int i = 0; i <= 4-binlength; i++){
+        for(int i = 0; i < 4-binlength; i++){
             bin = "0" + bin;
         }
 
-        for(int i = 0; i <= 4; i++){
+        for(int i = 0; i < 4; i++){
             if(bin[i] == '0') state = LOW;
             if(bin[i] == '1') state = HIGH;
             digitalWrite(binPins[i], state);
