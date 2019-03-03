@@ -73,17 +73,25 @@ void loadFromEEPROM() {
 
 void loop() {
   measure(true);
-  if (line) {
-    updateBlink(200);
-  }
   calculate();
-  if (power != 0) {
+  if (line && power != 0) {
     send();
+    digitalWriteArray(ledPins, true);
+    delay(10);
+  }else{
+    digitalWriteArray(ledPins, false);
   }
+
   if (Serial.available()) {
     if (Serial.read() == 42) {
       calibrate();
     }
+  }
+}
+
+void digitalWriteArray(byte a[], bool state){
+  for(int i = 0; i<sizeof(a)/sizeof(a[0]); i++){
+    digitalWrite(a[i], state);
   }
 }
 
@@ -113,15 +121,15 @@ void calculate() {
         branches[b] =  4 - i;
     }
 
-    side_branches[b] = hit[32 + b];
+    //side_branches[b] = hit[32 + b];
 
     if (branches[b] > branches[bestBranch])
       bestBranch = b;
 
     count += branches[b];
-    count += side_branches[b];
+    //count += side_branches[b];
     sum += branches[b] * angles[b];
-    sum += side_branches[b] * side_angles[b];
+    //sum += side_branches[b] * side_angles[b];
   }
 
   angle = sum / count;
@@ -161,9 +169,9 @@ void calibrate() {
   }
 
   for (int i = 0; i < 48; i++) {
-    if (maxValue[i] - minValue[i] < 10)
+    if (maxValue[i] - minValue[i] < 30)
       threshold[i] = 0;                         //not used sensors
-    threshold[i] = (minValue[i] + maxValue[i] * 3) / 4;
+    threshold[i] = (minValue[i] + maxValue[i]*3) / 4;
     EEPROM.write(i, threshold[i]);
   }
 }
