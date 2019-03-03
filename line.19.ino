@@ -28,6 +28,9 @@ int   threshold[48];                      //Schwellwerte fuer jeden Sensor
 int branches[8];
 int angles[8] = {0, 315, 270, 225, 180, 135, 90, 45};
 
+bool side_branches[8];
+int side_angles[8] = {337, 292, 247, 202, 157, 112, 62, 22};
+
 int angle;
 int power;
 
@@ -62,8 +65,8 @@ void setup() {
   loadFromEEPROM();
 }
 
-void loadFromEEPROM(){
-  for(int i = 0; i<48; i++){
+void loadFromEEPROM() {
+  for (int i = 0; i < 48; i++) {
     threshold[i] = EEPROM.read(i);
   }
 }
@@ -77,19 +80,19 @@ void loop() {
   if (power != 0) {
     send();
   }
-  if(Serial.available()){
-    if(Serial.read() == 42){
+  if (Serial.available()) {
+    if (Serial.read() == 42) {
       calibrate();
     }
   }
 }
 
-void send(){
+void send() {
   power = constrain(power, 0, 255);
   angle = constrain(angle, 0, 360);
   Serial.write(power);
   Serial.write(angle);
-  Serial.write(angle>>8);
+  Serial.write(angle >> 8);
 }
 
 void calculate() {
@@ -103,25 +106,30 @@ void calculate() {
 
   for (int i = 0; i < 8; i++)
     branches[i] = 0;
+
   for (int b = 0; b < 8; b++) {
     for (int i = 3; i >= 0; i--) {
       if (hit[b * 4 + i])
         branches[b] =  4 - i;
     }
 
+    side_branches[b] = hit[32 + b];
+
     if (branches[b] > branches[bestBranch])
       bestBranch = b;
 
     count += branches[b];
+    count += side_branches[b];
     sum += branches[b] * angles[b];
+    sum += side_branches[b] * side_angles[b];
   }
 
-  if (count != 0)
-    angle = sum / count;
+  angle = sum / count;
   power = count;
-  if (hit[41]) {
+
+  if (hit[41])
     power += 5;
-  }
+
   if (angle - angles[bestBranch] > 90) {
     angle += 180;
     angle %= 360;
@@ -156,7 +164,7 @@ void calibrate() {
     if (maxValue[i] - minValue[i] < 10)
       threshold[i] = 0;                         //not used sensors
     threshold[i] = (minValue[i] + maxValue[i] * 3) / 4;
-    EEPROM.write(i,threshold[i]);
+    EEPROM.write(i, threshold[i]);
   }
 }
 
