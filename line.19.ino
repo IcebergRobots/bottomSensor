@@ -76,10 +76,10 @@ void loop() {
   calculate();
   if (line && power != 0) {
     send();
-    digitalWriteArray(ledPins, true);
+    digitalWriteArray(ledPins, 5, true, constrain(power-1,0,4));
     delay(10);
   }else{
-    digitalWriteArray(ledPins, false);
+    digitalWriteArray(ledPins, 5, false);
   }
 
   if (Serial.available()) {
@@ -89,9 +89,20 @@ void loop() {
   }
 }
 
-void digitalWriteArray(byte a[], bool state){
-  for(int i = 0; i<sizeof(a)/sizeof(a[0]); i++){
+void digitalWriteArray(byte a[], int l, bool state){
+  for(int i = 0; i<l; i++){
     digitalWrite(a[i], state);
+  }
+}
+
+void digitalWriteArray(byte a[], int l, bool state, byte pwr){
+  for(int i = 0; i<l; i++){
+    if(i<=pwr){
+      digitalWrite(a[i], state);
+    }
+    else{
+      digitalWrite(a[i], !state);
+    }
   }
 }
 
@@ -158,7 +169,7 @@ void calibrate() {
 
   unsigned long calibration_Timer = millis() + 10000;
   while (millis() < calibration_Timer) {
-    updateBlink(600);
+    updateBlink(300);
     measure(false);
     for (int i = 0; i < 48; i++) {
       if (value[i] < minValue[i])
