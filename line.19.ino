@@ -73,12 +73,13 @@ void loadFromEEPROM() {
 
 void loop() {
   measure(true);
-  if (line) {
-    updateBlink(200);
-  }
   calculate();
-  if (power != 0) {
+  for(int i = 0; i<5; i++){
+      digitalWrite(ledPins[i], i<power);
+    }
+  if (line && power != 0) {
     send();
+    
   }
   if (Serial.available()) {
     if (Serial.read() == 42) {
@@ -147,9 +148,32 @@ void calibrate() {
     maxValue[i] = value[i];
     minValue[i] = value[i];
   }
+  
+  unsigned long calibration_Timer = millis() + 1000;
+  while(millis()<calibration_Timer){
+    updateBlink(500);
+    if(Serial.available())
+    Serial.read();
+  }
+  
+  while(!Serial.available()&&Serial.read()!=42){
+    updateBlink(200);
+  }
+  
+  measure(false);
+  for (int i = 0; i < 48; i++) {
+    minValue[i] = value[i];
+  }
+  calibration_Timer = millis() + 1000;
+  while(millis()<calibration_Timer){
+    updateBlink(500);
+    if(Serial.available())
+    Serial.read();
+  }
 
-  unsigned long calibration_Timer = millis() + 10000;
-  while (millis() < calibration_Timer) {
+  
+  
+  /*while (millis() < calibration_Timer) {
     updateBlink(600);
     measure(false);
     for (int i = 0; i < 48; i++) {
@@ -159,11 +183,11 @@ void calibrate() {
         maxValue[i] = value[i];
     }
   }
-
+*/
   for (int i = 0; i < 48; i++) {
     if (maxValue[i] - minValue[i] < 10)
       threshold[i] = 0;                         //not used sensors
-    threshold[i] = (minValue[i] + maxValue[i] * 3) / 4;
+    threshold[i] = (minValue[i] + maxValue[i]) / 2;
     EEPROM.write(i, threshold[i]);
   }
 }
