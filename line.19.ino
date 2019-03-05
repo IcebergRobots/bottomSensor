@@ -54,7 +54,7 @@ void setup() {
 
   pinMode(S1, INPUT);
   pinMode(S2, INPUT);
-  pinMode(S3, INPUT);
+  pinMode(S3, INPUT_PULLUP);
 
   pinMode(MUX_EN, OUTPUT);
   digitalWrite(MUX_EN, LOW);
@@ -64,15 +64,19 @@ void setup() {
 
 void loadFromEEPROM() {
   for (int i = 0; i < 8; i++) {
-    threshold[i] = EEPROM.read(i);
+    threshold[i] = EEPROM.read(i)*4;
   }
 }
 
 void loop() {
   measure(true);
   calculate();
+  for(int i = 0; i<8; i++){
+    if(threshold[i] == 0){
+    }
+  }
   if (line && power != 0) {
-    send();
+    //send();
     digitalWriteArray(ledPins, 5, true, constrain(power - 1, 0, 4));
     delay(10);
   } else {
@@ -120,7 +124,7 @@ void calculate() {
   int sum = 0;
   int count = 0;
   int bestBranch = 0;
-  
+
   for (int b = 0; b < 8; b++) {
     side_branches[b] = hit[b];
 
@@ -141,6 +145,7 @@ void calculate() {
 }
 
 void calibrate() {
+  Serial.println("CALIBRATION START...");
   int   maxValue[8];
   int   minValue[8];
 
@@ -165,10 +170,19 @@ void calibrate() {
   }
 
   for (int i = 0; i < 8; i++) {
-    if (maxValue[i] - minValue[i] < 30)
+    threshold[i] = (minValue[i] + 2*maxValue[i]) / 3;
+    if (maxValue[i] - minValue[i] < 60)
       threshold[i] = 0;                         //not used sensors
-    threshold[i] = (minValue[i] + maxValue[i]) / 2;
-    EEPROM.write(i, threshold[i]);
+    EEPROM.write(i, threshold[i]/4);
+
+    Serial.print("ID: ");
+    Serial.print(i);
+    Serial.print(" MIN: ");
+    Serial.print(minValue[i]);
+    Serial.print(" MAX: ");
+    Serial.print(maxValue[i]);
+    Serial.print(" THR: ");
+    Serial.println(threshold[i]);
   }
 }
 
