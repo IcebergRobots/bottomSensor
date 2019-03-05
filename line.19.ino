@@ -20,13 +20,10 @@
 byte  binPins[] = {B0, B1, B2, B3};      //die 4 Pins fuer die Multiplexer
 byte  ledPins[] = {2, 3, 4, 5, 6};
 
-int   value[48];                          //ausgelesene Werte
-bool  defect[48];                          //not used sensors
-bool  hit[48];                           //ausgeschlagene Sensoren
-int   threshold[48];                      //Schwellwerte fuer jeden Sensor
-
-int branches[8];
-int angles[8] = {0, 315, 270, 225, 180, 135, 90, 45};
+int   value[8];                          //ausgelesene Werte
+bool  defect[8];                          //not used sensors
+bool  hit[8];                           //ausgeschlagene Sensoren
+int   threshold[8];                      //Schwellwerte fuer jeden Sensor
 
 bool side_branches[8];
 int side_angles[8] = {337, 292, 247, 202, 157, 112, 62, 22};
@@ -66,7 +63,7 @@ void setup() {
 }
 
 void loadFromEEPROM() {
-  for (int i = 0; i < 48; i++) {
+  for (int i = 0; i < 8; i++) {
     threshold[i] = EEPROM.read(i);
   }
 }
@@ -76,9 +73,9 @@ void loop() {
   calculate();
   if (line && power != 0) {
     send();
-    digitalWriteArray(ledPins, 5, true, constrain(power-1,0,4));
+    digitalWriteArray(ledPins, 5, true, constrain(power - 1, 0, 4));
     delay(10);
-  }else{
+  } else {
     digitalWriteArray(ledPins, 5, false);
   }
 
@@ -89,18 +86,18 @@ void loop() {
   }
 }
 
-void digitalWriteArray(byte a[], int l, bool state){
-  for(int i = 0; i<l; i++){
+void digitalWriteArray(byte a[], int l, bool state) {
+  for (int i = 0; i < l; i++) {
     digitalWrite(a[i], state);
   }
 }
 
-void digitalWriteArray(byte a[], int l, bool state, byte pwr){
-  for(int i = 0; i<l; i++){
-    if(i<=pwr){
+void digitalWriteArray(byte a[], int l, bool state, byte pwr) {
+  for (int i = 0; i < l; i++) {
+    if (i <= pwr) {
       digitalWrite(a[i], state);
     }
-    else{
+    else {
       digitalWrite(a[i], !state);
     }
   }
@@ -119,48 +116,36 @@ void calculate() {
   angle = -1;
   if (!line)
     return;
+
   int sum = 0;
   int count = 0;
   int bestBranch = 0;
-
-  for (int i = 0; i < 8; i++)
-    branches[i] = 0;
-
+  
   for (int b = 0; b < 8; b++) {
-    for (int i = 3; i >= 0; i--) {
-      if (hit[b * 4 + i])
-        branches[b] =  4 - i;
-    }
+    side_branches[b] = hit[b];
 
-    //side_branches[b] = hit[32 + b];
-
-    if (branches[b] > branches[bestBranch])
+    if (side_branches[b] && threshold[b] - value[b] > threshold[bestBranch] - value[bestBranch])
       bestBranch = b;
 
-    count += branches[b];
-    //count += side_branches[b];
-    sum += branches[b] * angles[b];
-    //sum += side_branches[b] * side_angles[b];
+    count += side_branches[b];
+    sum += side_branches[b] * side_angles[b];
   }
 
   angle = sum / count;
   power = count;
 
-  if (hit[41])
-    power += 5;
-
-  if (angle - angles[bestBranch] > 90) {
+  if (abs(angle - side_angles[bestBranch]) > 120) {
     angle += 180;
     angle %= 360;
   }
 }
 
 void calibrate() {
-  int   maxValue[48];
-  int   minValue[48];
+  int   maxValue[8];
+  int   minValue[8];
 
   measure(false);
-  for (int i = 0; i < 48; i++) {
+  for (int i = 0; i < 8; i++) {
     defect[i] = false;                         //not used sensors
     threshold[i] = value[i];                     //Schwellwerte fuer jeden Sensor
     maxValue[i] = value[i];
@@ -171,7 +156,7 @@ void calibrate() {
   while (millis() < calibration_Timer) {
     updateBlink(300);
     measure(false);
-    for (int i = 0; i < 48; i++) {
+    for (int i = 0; i < 8; i++) {
       if (value[i] < minValue[i])
         minValue[i] = value[i];
       if (value[i] > maxValue[i])
@@ -179,10 +164,10 @@ void calibrate() {
     }
   }
 
-  for (int i = 0; i < 48; i++) {
+  for (int i = 0; i < 8; i++) {
     if (maxValue[i] - minValue[i] < 30)
       threshold[i] = 0;                         //not used sensors
-    threshold[i] = (minValue[i] + maxValue[i]*3) / 4;
+    threshold[i] = (minValue[i] + maxValue[i]) / 2;
     EEPROM.write(i, threshold[i]);
   }
 }
@@ -201,11 +186,8 @@ void updateBlink(int LEDCYCLE) {
 void measure(bool detectLine) {
   bool state;
   line = false;
-  for (int counter = 0; counter < 16; counter++) {
+  for (int counter = 0; counter < 8; counter++) {
     hit[counter] = false;
-    hit[counter + 16] = false;
-    hit[counter + 32] = false;
-
 
     String bin = String(counter, BIN);
     int binlength = bin.length();
@@ -219,11 +201,9 @@ void measure(bool detectLine) {
       if (bin[i] == '1') state = HIGH;
       digitalWrite(binPins[i], state);
     }
-    delayMicroseconds(1);
+    delayMicroseconds(5);
 
-    value[counter] = analogRead(S1);
-    value[counter + 16] = analogRead(S2);
-    value[counter + 32] = analogRead(S3);
+    value[counter] = analogRead(S3);
 
     if (detectLine) {
       if (value[counter] <= threshold[counter] && !defect[counter]) {
@@ -231,19 +211,10 @@ void measure(bool detectLine) {
         line = true;
       }
 
-      if (value[counter + 16] <= threshold[counter + 16] && !defect[counter + 16]) {
-        hit[counter + 16] = true;
-        line = true;
-      }
-      if (value[counter + 32] <= threshold[counter + 32] && counter <= 8 && !defect[counter + 32]) {
-        hit[counter + 32] = true;
-        line = true;
-      }
       if (line) {
         interrupt();
       }
     }
-
   }
 }
 
