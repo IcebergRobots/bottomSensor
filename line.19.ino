@@ -3,8 +3,8 @@
 //MUX-Bits; B0 ist MSB; B3 ist LSB
 #define B0 9
 #define B1 8
-#define B2 11
-#define B3 10
+#define B2 10
+#define B3 11
 
 //Analoge Ausgänge Multiplexer
 #define S1 A3
