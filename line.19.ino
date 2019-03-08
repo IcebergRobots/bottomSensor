@@ -31,10 +31,11 @@ int side_angles[8] = {337, 292, 247, 202, 157, 112, 62, 22};
 int angle;
 int power;
 
-bool  line = false;
+bool prevLine = false;
+bool line = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   for (int i = 2; i <= 13; i++) {     //digitale Pins auf Input
     pinMode(i, INPUT);
@@ -71,18 +72,22 @@ void loadFromEEPROM() {
 void loop() {
   measure(true);
   calculate();
-  for(int i = 0; i<8; i++){
-    if(threshold[i] == 0){
-    }
-  }
+
+
   if (line && power != 0) {
-    //send();
+    if(!prevLine){
+      send();
+    }
+    prevLine = true;
     digitalWriteArray(ledPins, 5, true, constrain(power - 1, 0, 4));
-    delay(10);
-  } else {
+  } 
+  else {
+    prevLine = false;
     digitalWriteArray(ledPins, 5, false);
+    digitalWrite(INTERRUPT_PIN, LOW);
   }
 
+  //Check for Calibration-request
   if (Serial.available()) {
     if (Serial.read() == 42) {
       calibrate();
@@ -234,6 +239,4 @@ void measure(bool detectLine) {
 
 void interrupt() {
   digitalWrite(INTERRUPT_PIN, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(INTERRUPT_PIN, LOW);
 }
