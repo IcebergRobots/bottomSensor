@@ -3,8 +3,8 @@
 //MUX-Bits; B0 ist MSB; B3 ist LSB
 #define B0 9
 #define B1 8
-#define B2 11
-#define B3 10
+#define B2 10
+#define B3 11
 
 //Analoge Ausgänge Multiplexer
 #define S1 A3
@@ -37,7 +37,7 @@ int power;
 bool  line = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   for (int i = 2; i <= 13; i++) {     //digitale Pins auf Input
     pinMode(i, INPUT);
@@ -49,6 +49,9 @@ void setup() {
 
   pinMode(BUZZER, OUTPUT);
   pinMode(SWITCH, INPUT_PULLUP);
+
+  pinMode(INTERRUPT_PIN, OUTPUT);
+
 
   pinMode(B0, OUTPUT);
   pinMode(B1, OUTPUT);
@@ -72,20 +75,30 @@ void loadFromEEPROM() {
 }
 
 void loop() {
-  measure(true);
-  calculate();
-  if (line && power != 0) {
-    send();
-    digitalWriteArray(ledPins, 5, true, constrain(power-1,0,4));
-    delay(10);
-  }else{
-    digitalWriteArray(ledPins, 5, false);
-  }
+  if((analogRead(SWITCH) > 500)){
 
-  if (Serial.available()) {
-    if (Serial.read() == 42) {
-      calibrate();
+    measure(true);
+    calculate();
+    digitalWrite(BUZZER, line && power != 0);
+
+    if (line && power != 0) {
+      interrupt();
+      send();
+      digitalWriteArray(ledPins, 5, true, constrain(power-1,0,4));
+      delay(10);
+    }else{
+      digitalWriteArray(ledPins, 5, false);
     }
+
+    if (Serial.available()) {
+      if (Serial.read() == 42) {
+        calibrate();
+      }
+    }
+
+  }else{
+    updateBlink(600);
+    digitalWrite(BUZZER, 0);
   }
 }
 
@@ -109,9 +122,7 @@ void digitalWriteArray(byte a[], int l, bool state, byte pwr){
 void send() {
   power = constrain(power, 0, 255);
   angle = constrain(angle, 0, 360);
-  Serial.write(power);
-  Serial.write(angle);
-  Serial.write(angle >> 8);
+  Serial.write(angle/2);
 }
 
 void calculate() {
@@ -182,8 +193,12 @@ void calibrate() {
   for (int i = 0; i < 48; i++) {
     if (maxValue[i] - minValue[i] < 30)
       threshold[i] = 0;                         //not used sensors
-    threshold[i] = (minValue[i] + maxValue[i]*3) / 4;
+    threshold[i] = (2*minValue[i] + 3*maxValue[i]) / 5;
     EEPROM.write(i, threshold[i]);
+  }
+
+  while(Serial.available()){
+    Serial.read();
   }
 }
 
@@ -235,12 +250,9 @@ void measure(bool detectLine) {
         hit[counter + 16] = true;
         line = true;
       }
-      if (value[counter + 32] <= threshold[counter + 32] && counter <= 8 && !defect[counter + 32]) {
+      if (value[counter + 32] <= threshold[counter + 32] && counter < 8 && !defect[counter + 32]) {
         hit[counter + 32] = true;
         line = true;
-      }
-      if (line) {
-        interrupt();
       }
     }
 
@@ -249,6 +261,6 @@ void measure(bool detectLine) {
 
 void interrupt() {
   digitalWrite(INTERRUPT_PIN, HIGH);
-  delayMicroseconds(5);
+  delayMicroseconds(10);
   digitalWrite(INTERRUPT_PIN, LOW);
 }
