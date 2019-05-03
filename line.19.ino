@@ -1,10 +1,10 @@
 #include<EEPROM.h>
 
-//MUX-Bits; B0 ist MSB; B3 ist LSB
-#define B0 9
-#define B1 8
-#define B2 10
-#define B3 11
+//MUX-Bits; D0 ist MSB; D3 ist LSB
+#define D0 9
+#define D1 8
+#define D2 10
+#define D3 11
 
 //Analoge Ausgänge Multiplexer
 #define S1 A3
@@ -17,7 +17,7 @@
 #define INTERRUPT_PIN   7                      //InterruptPin
 #define MUX_EN          12
 
-byte  binPins[] = {B0, B1, B2, B3};      //die 4 Pins fuer die Multiplexer
+byte  binPins[] = {D0, D1, D2, D3};      //die 4 Pins fuer die Multiplexer
 byte  ledPins[] = {2, 3, 4, 5, 6};
 
 int   value[48];                          //ausgelesene Werte
@@ -28,6 +28,7 @@ int   threshold[48];                      //Schwellwerte fuer jeden Sensor
 int sendValue = -1;
 
 int branches[8];
+int gaps[8];
 int angles[8] = {0, 315, 270, 225, 180, 135, 90, 45};
 
 bool side_branches[8];
@@ -55,10 +56,10 @@ void setup() {
   pinMode(INTERRUPT_PIN, OUTPUT);
 
 
-  pinMode(B0, OUTPUT);
-  pinMode(B1, OUTPUT);
-  pinMode(B2, OUTPUT);
-  pinMode(B3, OUTPUT);
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  pinMode(D3, OUTPUT);
 
   pinMode(S1, INPUT);
   pinMode(S2, INPUT);
@@ -135,7 +136,8 @@ void send() {
   }
   byte output = ((byte)sendValue/6) << 2;
   output |= constrain((power-1)/2, 0, 3) & B00000011;
-  Serial.write(output);
+  Serial.println("Angle: " + (String) angle);
+  //Serial.write(output);
 }
 
 void calculate() {
@@ -156,26 +158,53 @@ void calculate() {
         branches[b] =  4 - i;
     }
 
-    //side_branches[b] = hit[32 + b];
+    if(branches[b])
+      Serial.println("Branches with hits " + (String) branches[b] + " - " + (String) b);
 
+    //side_branches[b] = hit[32 + b];
+  
     if (branches[b] > branches[bestBranch])
       bestBranch = b;
 
     count += branches[b];
+    
     //count += side_branches[b];
     sum += branches[b] * angles[b];
+
+    /*for(int i=0; i<48; i++){
+      if(hit[i]){
+        Serial.print((String) i + ",");
+
+      }
+    }
+    Serial.println();*/
+    
     //sum += side_branches[b] * side_angles[b];
   }
-
+  Serial.println("Best Branch:" + (String) bestBranch);
   angle = sum / count;
+  Serial.println("Raw-Angle:" + (String) angle);
   power = count;
 
-  if (hit[41])
+  if (hit[40])
     power += 5;
 
-  if (angle - angles[bestBranch] > 90) {
+  Serial.print("Diferenz:" + (String) abs(angle - angles[bestBranch]));
+  /*if (abs(angle - angles[bestBranch]) > 90) {
     angle += 180;
     angle %= 360;
+  }*/
+  for(int i=0, i<8, i++){
+    gaps[i] = 0
+  }
+  byte maxVal = 0;
+  for(int i=0; i<16, i++){
+    if(gaps[i%8-1] == 0){
+        gaps[i%8] = gaps[i%8-1] + 1;
+        if(gaps[i%8] > gaps[maxVal]){
+          maxVal = i%8;
+        }
+    }
   }
 }
 
