@@ -25,6 +25,8 @@ bool  defect[48];                          //not used sensors
 bool  hit[48];                           //ausgeschlagene Sensoren
 int   threshold[48];                      //Schwellwerte fuer jeden Sensor
 
+int sendValue = -1;
+
 int branches[8];
 int angles[8] = {0, 315, 270, 225, 180, 135, 90, 45};
 
@@ -66,6 +68,12 @@ void setup() {
   digitalWrite(MUX_EN, LOW);
 
   loadFromEEPROM();
+
+  if((analogRead(SWITCH) > 500)){
+
+  }else{
+    calibrate();
+  }
 }
 
 void loadFromEEPROM() {
@@ -87,6 +95,7 @@ void loop() {
       delay(10);
     }else{
       digitalWriteArray(ledPins, 5, false);
+      sendValue = -1;
     }
 
     if (Serial.available()) {
@@ -121,7 +130,12 @@ void digitalWriteArray(byte a[], int l, bool state, byte pwr){
 void send() {
   power = constrain(power, 0, 255);
   angle = constrain(angle, 0, 360);
-  Serial.write(angle/2);
+  if(sendValue == -1){
+    sendValue = angle;
+  }
+  byte output = ((byte)sendValue/6) << 2;
+  output |= constrain((power-1)/2, 0, 3) & B00000011;
+  Serial.write(output);
 }
 
 void calculate() {
@@ -262,4 +276,5 @@ void interrupt() {
   digitalWrite(INTERRUPT_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(INTERRUPT_PIN, LOW);
+  delayMicroseconds(10);
 }
