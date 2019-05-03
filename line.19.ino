@@ -79,7 +79,6 @@ void loop() {
 
     measure(true);
     calculate();
-    digitalWrite(BUZZER, line && power != 0);
 
     if (line && power != 0) {
       interrupt();
@@ -191,8 +190,8 @@ void calibrate() {
   }
 
   for (int i = 0; i < 48; i++) {
-    threshold[i] = (minValue[i] + maxValue[i]*3) / 4;
-    if (maxValue[i] - minValue[i] < 30)
+    threshold[i] = (2*minValue[i] + maxValue[i]) / 3;
+    if (maxValue[i] - minValue[i] < 50)
       threshold[i] = 0;                         //not used sensors
     EEPROM.write(i, threshold[i]);
   }
