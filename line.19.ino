@@ -136,76 +136,74 @@ void send() {
   }
   byte output = ((byte)sendValue/6) << 2;
   output |= constrain((power-1)/2, 0, 3) & B00000011;
-  Serial.println("Angle: " + (String) angle);
-  //Serial.write(output);
+  Serial.write(output);
 }
 
 void calculate() {
+  //angles zurücksetzen
+  for(int i = 0; i<8; i++){
+    angles[i] %= 360;
+  }
+
   power = 0;
   angle = -1;
   if (!line)
     return;
   int sum = 0;
   int count = 0;
-  int bestBranch = 0;
 
+  //Branches zurücksetzen
   for (int i = 0; i < 8; i++)
     branches[i] = 0;
 
+  //Branchwerte berechnen
   for (int b = 0; b < 8; b++) {
     for (int i = 3; i >= 0; i--) {
       if (hit[b * 4 + i])
         branches[b] =  4 - i;
     }
-
-    if(branches[b])
-      Serial.println("Branches with hits " + (String) branches[b] + " - " + (String) b);
-
-    //side_branches[b] = hit[32 + b];
-  
-    if (branches[b] > branches[bestBranch])
-      bestBranch = b;
-
-    count += branches[b];
-    
-    //count += side_branches[b];
-    sum += branches[b] * angles[b];
-
-    /*for(int i=0; i<48; i++){
-      if(hit[i]){
-        Serial.print((String) i + ",");
-
-      }
-    }
-    Serial.println();*/
-    
-    //sum += side_branches[b] * side_angles[b];
+    //side_branches[b] = hit[32 + b];    
   }
-  Serial.println("Best Branch:" + (String) bestBranch);
-  angle = sum / count;
-  Serial.println("Raw-Angle:" + (String) angle);
-  power = count;
 
-  if (hit[40])
-    power += 5;
-
-  Serial.print("Diferenz:" + (String) abs(angle - angles[bestBranch]));
-  /*if (abs(angle - angles[bestBranch]) > 90) {
-    angle += 180;
-    angle %= 360;
-  }*/
-  for(int i=0, i<8, i++){
-    gaps[i] = 0
+  //Gaps zuruecksetzen
+  for(int i=0; i<8; i++){
+    gaps[i] = 0;
   }
+
+  //groesste Gap ermitteln
   byte maxVal = 0;
-  for(int i=0; i<16, i++){
-    if(gaps[i%8-1] == 0){
-        gaps[i%8] = gaps[i%8-1] + 1;
-        if(gaps[i%8] > gaps[maxVal]){
+  for(int i=0; i<16; i++){
+    if(branches[i%8] == 0){
+       gaps[i%8]++;
+       if(i != 0){
+         gaps[i%8] += gaps[(i-1)%8];
+       }
+       if(gaps[i%8] > gaps[maxVal]){
           maxVal = i%8;
         }
     }
   }
+
+  //Wertesprung zu Gap verschieben
+  for(int i = 0; i < maxVal; i++){
+    angles[i] += 360;
+  }
+  
+
+  //Durchschnitt bilden
+  for(int b = 0; b < 8; b++){
+    count += branches[b];
+    //count += side_branches[b];
+    sum += branches[b] * angles[b];
+    //sum += side_branches[b] * side_angles[b];
+  }
+  angle = sum / count;
+
+  angle %= 360;
+  power = count;
+
+  if (hit[40])
+    power += 5;  
 }
 
 void calibrate() {
