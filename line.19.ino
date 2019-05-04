@@ -137,6 +137,7 @@ void send() {
   byte output = ((byte)sendValue/6) << 2;
   output |= constrain((power-1)/2, 0, 3) & B00000011;
   Serial.write(output);
+  //Serial.println("Winkel: " + (String) angle);
 }
 
 void calculate() {
@@ -162,7 +163,10 @@ void calculate() {
       if (hit[b * 4 + i])
         branches[b] =  4 - i;
     }
-    //side_branches[b] = hit[32 + b];    
+    //side_branches[b] = hit[32 + b];  
+
+    //ln("Branch:" + (String) branches[b] + " - " + (String) b);
+    //Serial.print((String) branches[b] + ",");
   }
 
   //Gaps zuruecksetzen
@@ -185,8 +189,9 @@ void calculate() {
   }
 
   //Wertesprung zu Gap verschieben
-  for(int i = 0; i < maxVal; i++){
-    angles[i] += 360;
+  for(int i = 8; i > maxVal; i--){
+    angles[i%8] += 360;
+    //Serial.println("Angle-Add" + (String) angles[i]);
   }
   
 
@@ -198,6 +203,7 @@ void calculate() {
     //sum += side_branches[b] * side_angles[b];
   }
   angle = sum / count;
+  //Serial.println("Raw-Angle: " + (String) angle);
 
   angle %= 360;
   power = count;
@@ -236,6 +242,9 @@ void calibrate() {
       threshold[i] = 0;                         //not used sensors
     EEPROM.write(i, threshold[i]);
   }
+
+  defect[28] = true;
+  threshold[28] = 0;
 
   while(Serial.available()){
     Serial.read();
@@ -283,15 +292,18 @@ void measure(bool detectLine) {
     if (detectLine) {
       if (value[counter] <= threshold[counter] && !defect[counter]) {
         hit[counter] = true;
+        //Serial.println("Counter: " + (String) counter );
         line = true;
       }
 
       if (value[counter + 16] <= threshold[counter + 16] && !defect[counter + 16]) {
         hit[counter + 16] = true;
+        //Serial.println("Counter: " + (String) (counter+16));
         line = true;
       }
       if (value[counter + 32] <= threshold[counter + 32] && counter < 8 && !defect[counter + 32]) {
         hit[counter + 32] = true;
+        //Serial.println("Counter: " + (String) (counter+32));
         line = true;
       }
     }
