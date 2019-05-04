@@ -134,8 +134,9 @@ void send() {
   if(sendValue == -1){
     sendValue = angle;
   }
-  byte output = ((byte)sendValue/6) << 2;
-  output |= constrain((power-1)/2, 0, 3) & B00000011;
+  //byte output = ((byte)sendValue/6) << 2;
+  //output |= constrain((power-1)/2, 0, 3) & B00000011;
+  byte output = (byte) map(angle, 0, 360, 0, 255);
   Serial.write(output);
   //Serial.println("Winkel: " + (String) angle);
 }
